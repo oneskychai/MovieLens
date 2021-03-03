@@ -67,7 +67,7 @@ We can apply this same method across the users, as some users are more generous 
 ![Distribution of user biases](figs/user_bias_dist.png)
 </p>
 
-We calculate the user bias, $b_u$, by grouping the observations by user, subtracting $\mu$ and the respective $b_i$ for each movie, then averaging the results. This produces the following:
+We calculate the user bias, $b_u$, by grouping the observations by user, subtracting $\mu$ and the respective $b_i$ for each movie, then averaging the results. Incorporating the user bias, our model now looks like this:
 
 $$
 Y_{u,i} = \mu + b_i + b_u + \epsilon_{u,i}
@@ -137,7 +137,7 @@ We test out our regularized movie and user biases on the test set, and we get an
 
 ### The genre bias, $b_g$
 
-The next variable we will explore is the genre bias, $b_g$, where $g$ is the combination of genres for movie $i$. The training set has 19 different genres in 797 unique combinations, some movies with no genres listed, and some with as many as 8. After removing the regularized movie and user biases, we can see that there are over 200 genre combinations with a slight bias of $\pm0.1$, and over 55 combinations with more pronounced biases:
+The next variable we will explore is the genre bias, $b_g$, where $g$ is the combination of genres for movie $i$. The training set has 19 different genres in 797 unique combinations, some movies with no genres listed, and some with as many as 8. After removing the regularized movie and user biases, we can see that there are over 200 genre combinations with a slight bias of around $\pm0.1$, and over 55 combinations with more pronounced biases:
 
 <p>
 ![Distribution of genre biases](figs/genre_bias_dist.png)
@@ -181,7 +181,7 @@ Grouping the observations by the age of the movie at the time of the rating and 
 ![Time effect on rating](figs/temporal_effect.png)
 </p>
 
-We see a distinct pattern, with the number of ratings dropping off over time, and the average rating fluctuating in a fairly consistent wave pattern until around the 65 year mark, where the pattern breaks down into chaos.
+We see a distinct pattern, with the number of ratings dropping off over time, and the average rating fluctuating in a fairly consistent wave pattern until around the 65 year mark, where the pattern begins to break down into chaos.
 
 We add a time bias, $b_t$ to our model, where $t$ is the number of years since movie $i$ was released:
 

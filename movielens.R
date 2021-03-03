@@ -3,10 +3,10 @@ library("tidyverse")
 library("lubridate")
 library("caret")
 
-# Load edx object
+# Load edx training set object
 load("rdas/edx.rda")
 
-# Partition edx into test and train sets
+# Partition edx further into test and train sets
 set.seed(1, sample.kind = "Rounding")
 test_index <- createDataPartition(edx$rating, times = 1, p = 0.1, list = F)
 train_set <- edx[-test_index]
@@ -83,7 +83,7 @@ rmse_movie_user_bias <- RMSE(predicted_ratings, test_set$rating)
 rmse_results <- rbind(rmse_results, c("Movie/user bias", rmse_movie_user_bias))
 rm(rmse_movie_user_bias, movie_bias, user_bias)
 
-# Regularize movie and user biases with cross validation
+# Regularize movie and user biases with K-fold cross validation
 
 # Create 5 folds for cross validation on lambda
 set.seed(1, sample.kind = "Rounding")
@@ -118,7 +118,8 @@ for (i in 1:5) {
   # Calculate RMSE's for different lambdas
   for (j in 1:5) {
     
-    # Calculate average rating of train set
+    # Calculate average rating of cv_train set
+    # Note we will need to reset mu later for the whole train set
     mu <- mean(cv_train$rating)
     
     # Calculate regularized movie biases
@@ -174,7 +175,7 @@ rm(b_i, b_u, cv_results, cv_test, cv_train, indexes, removed, temp,
 
 # Calculate RMSE using regularized movie and user biases
 
-# Reset mu
+# Reset mu for the whole train set
 mu <- mean(train_set$rating)
 
 # Calculate regularized movie biases
@@ -442,7 +443,7 @@ validation <- validation %>%
 validation %>%
   ggplot(aes(error)) +
   geom_histogram(aes(y = stat(width * density)), breaks = seq(0, 4.5, 0.25),
-                 color = "black", fill = "red4") +
+                 color = "black", fill = "orangered3") +
   xlab("| prediction - rating |") +
   scale_y_continuous(breaks = seq(0, 0.25, 0.05),
                      labels = paste0(seq(0, 25, 5), "%")) +
