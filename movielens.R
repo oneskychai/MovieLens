@@ -46,6 +46,9 @@ train_set %>%
   xlab("Average rating by movie") +
   ggtitle("Distribution of average ratings by movie")
 
+# Save plot
+ggsave("figs/avg_movie_rating_dist.png")
+
 # Calculate movie biases
 movie_bias <- train_set %>%
   group_by(movieId) %>%
@@ -73,6 +76,9 @@ user_bias %>%
   geom_histogram(binwidth = 0.25, color = "black", fill = "seagreen4") +
   xlab("User rating bias") +
   ggtitle("Distribution of user rating biases")
+
+# Save plot
+ggsave("figs/user_bias_dist.png")
 
 # Generate predictions and calculate RMSE of guessing mu + b_i + b_u
 predicted_ratings <- test_set %>%
@@ -162,6 +168,9 @@ cv_results %>%
   theme(axis.ticks = element_blank()) +
   facet_wrap(~iteration, scales = "free")
 
+# Save plot
+ggsave("figs/cv_results_3.png")
+
 # Extract best lambdas from cv_results
 best_lambdas <- cv_results %>%
   group_by(iteration) %>%
@@ -182,11 +191,17 @@ movie_bias_reg <- train_set %>%
   group_by(movieId) %>%
   summarize(b_i_reg = sum(rating - mu) / (n() + lambda))
 
+# Save regularized movie biases
+save(movie_bias_reg, file = "rdas/movie_bias_reg.rda")
+
 # Calculate regularized user biases
 user_bias_reg <- train_set %>%
   left_join(movie_bias_reg, by = "movieId") %>%
   group_by(userId) %>%
   summarize(b_u_reg = sum(rating - mu - b_i_reg) / (n() + lambda))
+
+# Save regularized user biases
+save(user_bias_reg, file = "rdas/user_bias_reg.rda")
 
 # Generate predictions using regularized movie and user biases
 predicted_ratings <- test_set %>%
@@ -228,6 +243,9 @@ genre_bias <- train_set %>%
   group_by(genres) %>%
   summarize(b_g = mean(rating - b_i_reg - b_u_reg) - mu)
 
+# Save genre biases
+save(genre_bias, file = "rdas/genre_bias.rda")
+
 # Examine highest and lowest genre biases
 genre_bias %>%
   arrange(desc(b_g)) %>%
@@ -243,6 +261,9 @@ genre_bias %>%
   geom_histogram(binwidth = 0.1, color = "black", fill = "firebrick4") +
   xlab("Genre rating bias") +
   ggtitle("Distribution of genre rating biases")
+
+# Save plot
+ggsave("figs/genre_bias_dist.png")
 
 # Generate predictions using regularized movie/user biases and genre bias
 predicted_ratings <- test_set %>%
@@ -307,6 +328,9 @@ train_time %>%
                        c("midnight", "4 am", "8 am", "noon", "4 pm", "8 pm")) +
   ylab("Average residual")
 
+# Save plot
+ggsave("figs/hour_effect.png")
+
 # Plot relationship between rating month and average residual
 train_time %>%
   group_by(month) %>%
@@ -317,6 +341,9 @@ train_time %>%
   scale_x_continuous(name = "Month", breaks = 1:12, labels = month.abb) +
   scale_y_continuous(name = "Average residual") +
   theme(panel.grid.minor = element_blank())
+
+# Save plot
+ggsave("figs/month_effect.png")
 
 # Plot relationship between movie age and average residual
 train_time %>%
@@ -330,10 +357,16 @@ train_time %>%
   xlab("Years since movie released") +
   ylab("Average residual")
 
+# Save plot
+ggsave("temporal_effect.png")
+
 # Store average residuals in time bias tibble
 time_bias <- train_time %>%
   group_by(years_old) %>%
   summarize(b_t = mean(resid))
+
+# Save time biases
+save(time_bias, file = "rdas/time_bias.rda")
 
 # Extract time data from test set
 test_time <- test_set %>%
@@ -427,6 +460,9 @@ predicted_ratings <- validation %>%
   mutate(pred = ifelse(pred > 5, 5, pred)) %>%
   .$pred
 
+# Save final predictions
+save(predicted_ratings, file = "rdas/final_predictions.rda")
+
 # Calculate final RMSE
 rmse_final <- RMSE(predicted_ratings, validation$rating)
 rmse_final
@@ -434,9 +470,15 @@ rmse_final
 # Add final RMSE to results tibble
 rmse_results <- rbind(rmse_results, c("Final test", rmse_final))
 
+# Save rmse results tibble
+save(rmse_results, file = "rdas/rmse_results.rda")
+
 # Add prediction and error columns to validation set
 validation <- validation %>%
   mutate(pred = predicted_ratings, error = abs(pred - rating))
+
+# Save modified validation set
+save(validation, file = "rdas/validation_2.rda")
 
 # Plot distribution of errors
 validation %>%
@@ -448,6 +490,9 @@ validation %>%
                      labels = paste0(seq(0, 25, 5), "%")) +
   ylab("percentage") +
   ggtitle("Prediction error distribution")
+
+# Save plot
+ggsave("error_distribution.png")
 
 # Summarize errors
 summary(validation$error)
