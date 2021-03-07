@@ -3,6 +3,9 @@ library("tidyverse")
 library("lubridate")
 library("caret")
 
+# Create and save training and test sets
+# https://github.com/oneskychai/MovieLens/blob/trunk/create_data_sets.R
+
 # Load edx training set object
 load("rdas/edx.rda")
 
@@ -46,7 +49,7 @@ train_set %>%
 # Calculate movie biases
 movie_bias <- train_set %>%
   group_by(movieId) %>%
-  summarize(b_i = mean(rating - mu))
+  summarize(b_i = mean(rating) - mu)
 
 # Generate predictions and calculate RMSE of guessing mu + b_i
 predicted_ratings <- mu + test_set %>%
@@ -62,7 +65,7 @@ rm(rmse_movie_bias)
 user_bias <- train_set %>%
   left_join(movie_bias, by = "movieId") %>%
   group_by(userId) %>%
-  summarize(b_u = mean(rating - b_i - mu))
+  summarize(b_u = mean(rating - b_i) - mu)
 
 # Plot distribution of user biases
 user_bias %>%
@@ -119,25 +122,25 @@ for (i in 1:5) {
   for (j in 1:5) {
     
     # Calculate average rating of cv_train set
-    # Note we will need to reset mu later for the whole train set
-    mu <- mean(cv_train$rating)
+
+        mu_cv <- mean(cv_train$rating)
     
     # Calculate regularized movie biases
     b_i <- cv_train %>%
       group_by(movieId) %>%
-      summarize(b_i = sum(rating - mu) / (n() + lambdas[j]))
+      summarize(b_i = sum(rating - mu_cv) / (n() + lambdas[j]))
     
     # Calculate regularized user biases
     b_u <- cv_train %>%
       left_join(b_i, by = "movieId") %>%
       group_by(userId) %>%
-      summarize(b_u = sum(rating - mu - b_i) / (n() + lambdas[j]))
+      summarize(b_u = sum(rating - mu_cv - b_i) / (n() + lambdas[j]))
     
     # Generate predictions using regularized movie and user biases
     predicted_ratings <- cv_test %>%
       left_join(b_i, by = "movieId") %>%
       left_join(b_u, by = "userId") %>%
-      mutate(pred = mu + b_i + b_u) %>%
+      mutate(pred = mu_cv + b_i + b_u) %>%
       .$pred
     
     # Calculate RMSE
@@ -171,12 +174,9 @@ lambda <- mean(best_lambdas) # lambda <- 4.83
 
 # Remove unnecessary objects
 rm(b_i, b_u, cv_results, cv_test, cv_train, indexes, removed, temp,
-   best_lambdas, i, j, lambdas, rmse)
+   best_lambdas, i, j, lambdas, mu_cv, rmse)
 
 # Calculate RMSE using regularized movie and user biases
-
-# Reset mu for the whole train set
-mu <- mean(train_set$rating)
 
 # Calculate regularized movie biases
 movie_bias_reg <- train_set %>%
@@ -227,7 +227,7 @@ genre_bias <- train_set %>%
   left_join(movie_bias_reg, by = "movieId") %>%
   left_join(user_bias_reg, by = "userId") %>%
   group_by(genres) %>%
-  summarize(b_g = mean(rating - mu - b_i_reg - b_u_reg))
+  summarize(b_g = mean(rating - b_i_reg - b_u_reg) - mu)
 
 # Examine highest and lowest genre biases
 genre_bias %>%

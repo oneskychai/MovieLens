@@ -52,4 +52,9 @@ validation <- temp %>%
 removed <- anti_join(temp, validation)
 edx <- rbind(edx, removed)
 
+# Save training and test sets
+save(edx, file = "rdas/edx.rda")
+save(validation, file = "rdas/validation.rda")
+
+# Remove unnecessary objects
 rm(dl, ratings, movies, test_index, temp, movielens, removed)

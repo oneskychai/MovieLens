@@ -15,12 +15,12 @@ This is a report on a model that has been created for making movie recommendatio
 
 The goal of the project is to use the existing data to create a model that predicts ratings on user movie combinations that are not in the set. The data is first downloaded and partitioned into a training set and test set. All training is performed on the training set, with the test set reserved strictly for a final test of the model. This ensures that the model is not fitted to the test data and produces an honest measure of the model's accuracy. Ratings range from 0.5 to 5, and are in 0.5 increments.
 
-The training process involves exploring the data while looking for correlations between the different variables. The training set is further partitioned into training and test sets in order to assess the accuracy of the model as it evolves. Our starting point is the overall average of all ratings. From there, we incorporate tendencies of individual movies and users. Next, we regularize these tendencies using K-fold cross validation to determine the best tuned parameter, lambda. Then we account for tendencies among genres. Finally, we explore temporal influences of values such as how old the movie is, as well as the month and the hour the rating was submitted.
+The training process involves exploring the data while looking for correlations between the different variables. The training set is further partitioned into training and test sets in order to assess the accuracy of the model as it evolves. Our starting point is the overall average of all ratings. From there, we incorporate tendencies of individual movies and users. Next, we regularize these tendencies using K-fold cross validation to determine the best tuned parameter, lambda. Then we account for tendencies among genres. Finally, we explore temporal influences of values such as the month and the hour the rating was submitted, as well as how old the movie is.
 
 The value that we use to measure the accuracy of our model is the Root Mean Square Error, or RMSE. To calculate this, we sum up the squares of the differences between our predictions and the actual ratings, then take the square root of the average. The goal is to minimize the RMSE, and get it down below 0.86490.
 
 $$
-RMSE = \sqrt{\frac{1}{N}\sum_{k=1}^{N}{(\hat{y_{k}} - y_k)^2}}
+RMSE = \sqrt{\frac{1}{N}\sum_{k=1}^{N}{(\hat{y}_k - y_k)^2}}
 $$
 
 ## Methods
@@ -80,7 +80,7 @@ Guessing $\mu + b_i + b_u$ for our predictions, we reduce our RMSE to about 0.86
 Some movies are rather obscure, and have very few, or only one rating. Some users have submitted very few ratings. This can skew some of our predictions, as we don't have enough samples to accurately determine a meaningful average. Here we employ regularization to shrink the averages towards zero for the movie and user biases with few observations. Instead of dividing by the number of ratings, $N$, for each movie or user to obtain the respective bias, we add a regularizing parameter, $\lambda$, to $N$ and divide by that. This will shrink values with small $N$ considerably while minimally affecting values with large $N$:
 
 $$
-b_{reg} = \frac{1}{N + \lambda}\sum_{k=1}^{N}{(y_k - \mu)}
+b_{reg} = \frac{N}{N + \lambda}b
 $$
 
 ### Tuning lambda with K-fold cross validation
@@ -133,7 +133,7 @@ $$
 b_{u} = \frac{1}{N + \lambda}\sum_{i}{(y_{u,i} - b_i - \mu)}
 $$
 
-We test out our regularized movie and user biases on the test set, and we get an RMSE of about 0.8641, producing a small gain of about a twentieth of a percentage point in accuracy.
+We test out our regularized movie and user biases on the test set, and we get an RMSE of about 0.8641, producing a small gain of about 1/20th of a percentage point in accuracy.
 
 ### The genre bias, $b_g$
 
@@ -160,7 +160,7 @@ Before we can examine these comparisons, we need to do some data wrangling. Firs
 Next we calculate the residuals by removing $\mu$ along with the movie, user, and genre biases:
 
 $$
-R_{i,u} = Y_{i,u} - \mu - b_i - b_u - b_g
+r_{i,u} = y_{i,u} - \mu - \hat{b}_i - \hat{b}_u - \hat{b}_g
 $$
 
 Grouping the observations by the hour the rating was submitted and plotting the average residuals against the time of day, we observe that there is no strong correlation; the variations are all less than 1/100th of a rating point:
@@ -193,7 +193,7 @@ Before we can test our updated model, we need to wrangle the data in our working
 
 ### Rating range
 
-Our model is performing quite well at this point. One final adjustment we can make is to ensure our predictions fall within the appropriate range. All ratings in the training set are between 0.5 and 5. Examining our predictions, we find the ratings range from -0.546 to 5.873. We can improve our accuracy a little by setting all predictions below 0.5 to 0.5, and setting all predictions above 5 to 5. Once we do this, our model yields an RMSE of 0.8633, producing another small gain of about 1/70th of a percentage point.
+Our model is performing well at this point. One final adjustment we can make is to ensure our predictions fall within the appropriate range. All ratings in the training set are between 0.5 and 5. Examining our predictions, we find the ratings range from -0.546 to 5.873. We can improve our accuracy a little by setting all predictions below 0.5 to 0.5, and setting all predictions above 5 to 5. Once we do this, our model yields an RMSE of 0.8633, producing another small gain of about 1/70th of a percentage point.
 
 ## Results
 
