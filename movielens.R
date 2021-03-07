@@ -122,8 +122,7 @@ for (i in 1:5) {
   for (j in 1:5) {
     
     # Calculate average rating of cv_train set
-
-        mu_cv <- mean(cv_train$rating)
+    mu_cv <- mean(cv_train$rating)
     
     # Calculate regularized movie biases
     b_i <- cv_train %>%
